@@ -150,16 +150,7 @@ The system includes pre-loaded benchmark assets accessible via the 'Load AI Benc
 
 ---
 
-## 9. Social Media Platform Integration
-
-Warden provides client-boundary interceptors and API integrations for social media platforms:
-- **Instagram Direct Messages (DMs):** Intercepts native media picker before preview generation or upload transmission.
-- **WhatsApp Web:** Intercepts attachment events in chat composers, streaming media directly to the Warden verification pipeline.
-- **Chrome Extension (Manifest V3):** Lightweight client in `extension/` providing zero-latency binary streaming and real-time gate pass/block enforcement.
-
----
-
-## 10. Team TITANS Credits
+## 9. Team TITANS Credits
 
 - **Anandhu A**
 - **Akshay B A**
@@ -167,4 +158,5 @@ Warden provides client-boundary interceptors and API integrations for social med
 - **Manu V S**
 
 *HackAthena 2.0 — Theme: Detection and Prevention of AI-Based Frauds*
+
 
