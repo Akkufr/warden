@@ -1,6 +1,10 @@
 # WARDEN — An API Framework That Works With Social Media Platforms
 ## Consent-Based Biometric Upload Gating & Chrome Extension (Instagram DMs, WhatsApp Web, and Web APIs)
 
+**Event:** HackAthena 2.0  
+**Theme:** Detection and Prevention of AI-Based Frauds  
+**Team:** TITANS (Anandhu A, Akshay B A, Joshy Bovas, Manu V S)  
+
 ---
 
 ## 1. Overview & Architecture

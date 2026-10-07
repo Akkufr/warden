@@ -1,6 +1,10 @@
 # WARDEN — An API Framework That Works With Social Media Platforms
 ## Consent-Based Identity Verification & Biometric Upload Gating Framework
 
+**Event:** HackAthena 2.0  
+**Theme:** Detection and Prevention of AI-Based Frauds  
+**Team:** TITANS (Anandhu A, Akshay B A, Joshy Bovas, Manu V S)  
+
 ---
 
 ## 1. Executive Summary
@@ -20,7 +24,7 @@ Because AI-generated impersonation (deepfakes, face-swaps, cloned-identity inves
 | **Core Mechanism** | Cryptographic hash of known original image | CNN/Transformer classifying visual artifacts | 128-d Vector Cosine Similarity via FAISS |
 | **Wholly Synthetic Content** | ❌ **Fails completely** (no original file exists to hash) | ⚠️ **Unstable** (broken by new diffusion models & compression) | ✅ **Detects successfully** (matches invariant facial geometry) |
 | **Adversarial Resilience** | High against byte modification, zero against synthesis | Low (rapidly becomes obsolete as generators improve) | High (geometry is required for the fraud to deceive viewers) |
-| **Scaling Complexity** | O(1) hash lookup | O(N) heavy video neural network inference | **Sub-linear** approximate nearest neighbor search |
+| **Scaling Complexity** | O(1) hash lookup | O(N) heavy video neural network inference | **Sub-linear (O(log n))** approximate nearest neighbor search |
 | **Privacy Model** | Hashes stored | Raw images or full model weights | **Embeddings only**; zero raw image retention |
 
 ---
@@ -31,45 +35,64 @@ Because AI-generated impersonation (deepfakes, face-swaps, cloned-identity inves
 [ Input: Video / Image ]
           │
           ▼
-1. [ Resolution-Tiered Preprocessing ] ──── (Downscale to 640/720p for <30ms latency)
+1. [ Resolution-Tiered Preprocessing ] ──── (Downscale before detection; full resolution not needed)
           │
           ▼
-2. [ Adaptive Temporal Sampling ] ───────── (Sample 2.5 fps / scene cuts for video; direct for image)
+2. [ Adaptive Temporal Sampling ] ───────── (Sample via scene-cut detection; skips redundant frames)
           │
           ▼
-3. [ Per-Frame Face Detection (YuNet) ] ── (Locates bounding boxes & 5 facial landmarks)
+3. [ Per-Frame / Per-Image Detection ] ──── (YuNet bounding boxes & 5 landmarks; no positional tracking)
           │
           ▼
-4. [ Intra-Content Identity Dedup ] ─────── (Discards repeat faces in same session; saves >80% DB load)
+4. [ Intra-Content Identity Dedup ] ─────── (Match face once per video, never re-process; saves >80% load)
           │
           ▼
-5. [ Pipelined Asynchronous Matching ] ─── (Immediate async dispatch to vector engine)
+5. [ Pipelined Asynchronous Matching ] ─── (Registry lookup runs in parallel with ongoing scanning)
           │
           ▼
-6. [ Approximate Nearest-Neighbor (FAISS) ] (IndexFlatIP Cosine Similarity in 128-D space)
+6. [ FAISS Vector Matching (HNSW/FlatIP) ] (Sub-linear O(log n) approximate nearest-neighbor search)
           │
           ▼
-7. [ Verdict Formulation: Guard / Ledger ] ─ (Instant Gate Pass/Block with Early-Exit or Audit Ledger)
+7. [ Verdict Formulation: Guard / Ledger ] ─ (Optional Early-Exit toggle for speed or full audit ledger)
 ```
 
 ---
 
 ## 4. Key Modules & Features
 
-### A. Dual API Operating Modes
-- **GUARD Mode:** Real-time upload gating. Emits an immediate `PASS` or `BLOCK` decision. Supports **Early-Exit** to terminate scanning immediately upon the first confirmed unauthorized match.
+### A. Dual API Operating Modes & Early-Exit Toggle
+- **GUARD Mode:** Real-time upload gating. Emits an immediate `PASS` or `BLOCK` decision. Includes an **Optional Early-Exit toggle** that stops scanning the instant a match is found for speed-prioritized deployments.
 - **LEDGER Mode:** Compliance & audit reporting. Scans the complete content to compile an audit ledger detailing every registered identity discovered, frame numbers, timestamps, and cosine similarity scores.
 
-### B. Direct Upload & Auto-Detection
-- **Universal Media Ingestion:** Drag and drop or browse any image or video file without dropdown menus.
-- **Automatic Format Detection:** Automatically identifies whether the media is a Video stream (MP4, WebM, AVI) or Still Image (JPEG, PNG, WEBP) and selects the appropriate pipeline branch.
-- **One-Click Benchmark Example:** Instant access to pre-packaged AI deepfake/impersonation test assets for evaluation.
+### B. Processing Efficiency Methods
+- **Resolution-Tiered Preprocessing:** Downscales media before detection (to 640/720p in <30ms); full high-definition resolution isn't needed to detect face presence.
+- **Adaptive Temporal Sampling:** Frames are sampled via scene-cut detection, skipping redundant frames across video sequences.
+- **Per-Frame / Per-Image Detection with No Positional Tracking:** Evaluates faces independently per frame to avoid fragility across scene cuts, camera panning, and severe occlusion.
+- **Intra-Content Identity Deduplication:** A detected face is matched once per video and never re-processed again, eliminating redundant database queries.
+- **Pipelined Asynchronous Matching:** Vector registry lookup runs in parallel with ongoing frame scanning, rather than waiting for the entire upload to finish.
 
-### C. Calibrated SFace Facial Geometry Recognition
-- **Sub-Linear Cosine Similarity:** Calibrated 50.0% decision threshold providing robust discrimination:
-  - Different individuals: `< 20.0%` similarity.
-  - Same registered individual across varied poses/lighting: `55.0% - 95.0%` similarity.
-- **Clean Vector Alignment Monitor:** 32-channel normalized feature spectrum display with real-time margin and identity tracking (radar animation replaced with clean telemetry).
+### C. Cross-Referencing & Database Matching at Scale
+- **FAISS Vector Database:** High-performance vector database powering rapid, high-accuracy biometric registry search.
+- **HNSW Indexing:** Sub-linear (O(log n)) approximate nearest-neighbor search time, eliminating brute-force O(n) search bottlenecks.
+- **Shardable Architecture:** The registry can be partitioned and split across multiple machines, never capped by a single server's memory.
+- **Calibrated SFace Facial Geometry Recognition:** Calibrated 50.0% decision threshold providing robust discrimination (different individuals `< 20%`, matches `55% - 95%`) paired with real-time 32-channel vector alignment telemetry.
+
+### D. Security & Hardened Infrastructure
+- **Embeddings-Only Storage:** Raw facial images are permanently discarded after registration; only 128-dimensional mathematical embeddings are retained.
+- **Encryption at Rest & in Transit:** End-to-end cryptographic protection for all biometric vectors, registry metadata, and network streams.
+- **Sharded Registry Storage:** Partitioned storage limits the exposure radius of any single breach.
+- **Strict Access Control with Audit Logging:** Fine-grained access control with tamper-evident audit logging across all administrative queries.
+- **Rate-Limiting:** Active protection against bulk-query exfiltration attempts and denial-of-service spikes.
+- **Hardened Media Ingestion:** Magic-byte file validation, sandboxed decoding with strict timeouts and memory limits, and fail-safe defaults against corrupt or intentionally sabotaged files.
+- **Company-Owned Registry Model:** Warden never holds the sensitive biometric data itself, empowering platforms to retain complete custody and drastically reducing third-party breach risk.
+
+### E. Supporting Governance & Trust Features
+- **Consent Expiry & Renewal:** Likeness registration is not permanent; supports automated lifecycle policies and renewal schedules.
+- **Real-Time Match Alerts & Allowlists:** Instant alerts when protected likenesses are detected, paired with allowlists for high-profile/public figures to prevent alert fatigue.
+- **Self-Serve Registry Management:** Intuitive portal for individuals to view or revoke their consent anytime with immediate index eviction.
+- **False-Positive Dispute & Reporting Flow:** Built-in dispute resolution and reporting mechanisms for contested verdicts.
+- **Fairness Testing Commitment:** Continuous benchmark validation ensuring uniform accuracy across diverse skin tones, age groups, and lighting conditions.
+
 
 
 ---
@@ -133,4 +156,15 @@ Warden provides client-boundary interceptors and API integrations for social med
 - **Instagram Direct Messages (DMs):** Intercepts native media picker before preview generation or upload transmission.
 - **WhatsApp Web:** Intercepts attachment events in chat composers, streaming media directly to the Warden verification pipeline.
 - **Chrome Extension (Manifest V3):** Lightweight client in `extension/` providing zero-latency binary streaming and real-time gate pass/block enforcement.
+
+---
+
+## 10. Team TITANS Credits
+
+- **Anandhu A**
+- **Akshay B A**
+- **Joshy Bovas**
+- **Manu V S**
+
+*HackAthena 2.0 — Theme: Detection and Prevention of AI-Based Frauds*
 
