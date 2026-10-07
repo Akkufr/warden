@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: warden
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 8000
