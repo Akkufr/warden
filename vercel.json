@@ -1,13 +1,5 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/frontend/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/frontend/$1"
-    }
-  ]
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": "frontend"
 }

@@ -1,0 +1,11 @@
+# Ignore backend and python files so Vercel only builds the static frontend
+backend/
+models/
+data/
+run.py
+requirements.txt
+Dockerfile
+docker-compose.yml
+render.yaml
+extension/
+scratch/
