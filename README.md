@@ -150,7 +150,13 @@ The system includes pre-loaded benchmark assets accessible via the 'Load AI Benc
 
 ---
 
-## 9. Team TITANS Credits
+## 9. Simulation Prototype Scope & Integration Note
+
+Warden is a real-life mixed simulation prototype that showcases Warden's framework and simulates how Warden would overlook image and video media once deployed alongside larger social media giants. Many techniques are used to simulate this, but the architecture and framework of detecting and preventing abuse remain the same; the client integration part is simulated.
+
+---
+
+## 10. Team TITANS Credits
 
 - **Anandhu A**
 - **Akshay B A**
@@ -158,5 +164,6 @@ The system includes pre-loaded benchmark assets accessible via the 'Load AI Benc
 - **Manu V S**
 
 *HackAthena 2.0 — Theme: Detection and Prevention of AI-Based Frauds*
+
 
 
