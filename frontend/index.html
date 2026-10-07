@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WARDEN — Consent-Based Identity Verification Framework</title>
+  <meta name="description" content="Backend identity-verification and upload gating framework against AI-based impersonation and likeness fraud. Built for HackAthena 2.0 by Team TITANS.">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem("warden_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", saved);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- MINIMALISTIC 1-SECOND SPLASH SCREEN       -->
+  <!-- ========================================== -->
+  <div id="warden-splash" class="warden-splash-screen" role="status" aria-live="polite">
+    <div class="splash-inner">
+      <div class="splash-logo-card">
+        <svg class="splash-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="splash-text-block">
+        <div class="splash-title">WARDEN</div>
+        <div class="splash-subtitle">BIOMETRIC VERIFICATION PLATFORM</div>
+      </div>
+      <div class="splash-loader-track">
+        <div class="splash-loader-bar"></div>
+      </div>
+      <div class="splash-status-line">
+        <span class="splash-pulse-dot"></span>
+        <span class="splash-status-text">INITIALIZING ENGINE</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get("auto_run") === "1" || params.get("source") || params.get("file_path")) {
+          var splash = document.getElementById("warden-splash");
+          if (splash) {
+            splash.classList.add("splash-hidden");
+            splash.style.display = "none";
+          }
+          return;
+        }
+      } catch (e) {}
+
+      setTimeout(function() {
+        var splash = document.getElementById("warden-splash");
+        if (splash && !splash.classList.contains("splash-hidden")) {
+          splash.classList.add("splash-hidden");
+          setTimeout(function() {
+            splash.style.display = "none";
+          }, 380);
+        }
+      }, 1000);
+    })();
+  </script>
+
+  <!-- TOP NAVBAR -->
+  <header class="navbar">
+    <div class="brand-section">
+      <a href="#" class="brand-logo" id="brand-link">
+        <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4" stroke-width="2.5"/>
+        </svg>
+        <div class="brand-text-stack">
+          <span class="brand-title">WARDEN</span>
+          <span class="brand-subtitle">BIOMETRIC VERIFICATION PLATFORM</span>
+        </div>
+      </a>
+      <span class="brand-tag">ENTERPRISE EDITION</span>
+    </div>
+
+    <!-- TABS -->
+    <nav class="nav-links">
+      <button class="nav-btn active" data-tab="tab-pipeline" id="nav-pipeline-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Live Pipeline
+      </button>
+      <button class="nav-btn" data-tab="tab-registration" id="nav-reg-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Registration UX
+      </button>
+      <button class="nav-btn" data-tab="tab-registry" id="nav-registry-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        Consent & Registry
+      </button>
+      <button class="nav-btn" data-tab="tab-console" id="nav-console-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        Deployment Console
+      </button>
+    </nav>
+
+    <!-- RIGHT CONTROLS -->
+    <div class="nav-right-controls">
+      <!-- Mode Toggle 3 Buttons Together (Only 1 Selected At A Time) -->
+      <div class="mode-triple-group" id="header-mode-group">
+        <button class="mode-triple-btn active" id="btn-mode-guard" data-mode="guard" data-early="false" title="GUARD: Real-time upload gating. Evaluates media frames and returns immediate Pass/Block verdict only.">
+          <span>GUARD</span>
+          <span class="mode-info-icon">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </span>
+        </button>
+        <button class="mode-triple-btn" id="btn-mode-early" data-mode="guard" data-early="true" title="EARLY EXIT: High-speed Guard sub-mode. Stops processing immediately when the first match is confirmed, saving compute.">
+          <span>EARLY EXIT</span>
+          <span class="mode-info-icon">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </span>
+        </button>
+        <button class="mode-triple-btn" id="btn-mode-ledger" data-mode="ledger" data-early="false" title="LEDGER: Full-scan compliance and audit mode. Returns every registered match found across all frames.">
+          <span>LEDGER</span>
+          <span class="mode-info-icon">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <!-- Architecture & Specs Info Icon Button in corner -->
+      <button class="header-icon-btn" id="open-arch-btn" title="System Architecture & Specifications" aria-label="Architecture & Specifications">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </button>
+
+      <!-- Theme Toggle (Light / Dark) -->
+      <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Light / Dark Theme" aria-label="Toggle theme">
+        <svg class="theme-sun-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg class="theme-moon-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+
+      <!-- System status -->
+      <div class="sys-status-badge">
+        <div class="status-dot"></div>
+        <span id="sys-status-text">FAISS READY</span>
+      </div>
+    </div>
+  </header>
+
+
+  <main class="container">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: LIVE PIPELINE VISUALIZER (SECTION 11) -->
+    <!-- ========================================== -->
+    <section class="tab-content active" id="tab-pipeline">
+      <div class="pipeline-grid">
+
+        <!-- LEFT COLUMN: VIEWPORT & INPUTS -->
+        <div class="viewport-card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg>
+              Input Inspection Viewport
+            </span>
+            <div class="telemetry-badges">
+              <span class="badge-tag" id="badge-resolution">TIER 1 (640p)</span>
+              <span class="badge-tag" id="badge-fps">24 FPS</span>
+              <span class="badge-tag" id="badge-mode-ind">MODE: GUARD</span>
+            </div>
+          </div>
+
+          <!-- Video / Canvas display -->
+          <div class="viewport-display" id="viewport-container">
+            <canvas id="pipeline-canvas" width="640" height="400"></canvas>
+
+            <div class="viewport-placeholder" id="viewport-placeholder">
+              <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="2" width="20" height="20" rx="2.18"/><circle cx="12" cy="12" r="3"/><path d="M12 9v1m0 4v1"/>
+              </svg>
+              <div>
+                <strong style="color: var(--text-main);">Pipeline Ready for Ingestion</strong><br>
+                <span style="font-size: 0.8rem; font-family: var(--font-mono);">Select a benchmark test sample or upload content below</span>
+              </div>
+            </div>
+
+            <!-- HUD Overlay -->
+            <div class="hud-overlay" id="hud-overlay" style="display: none;">
+              <div class="hud-box" id="hud-left">FRAME: 0000 | TIME: 00:00</div>
+              <div class="hud-box" id="hud-right">FACES LOCATED: 0</div>
+            </div>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="progress-strip">
+            <div class="progress-fill" id="pipeline-progress-bar"></div>
+          </div>
+
+          <!-- Viewport Controls Bar: Direct Media Upload & Auto Detection -->
+          <div class="controls-bar">
+            <!-- Media Upload & Detection Box -->
+            <div class="upload-dropzone" id="upload-dropzone">
+              <input type="file" id="media-upload-input" accept="image/*,video/*" style="display: none;">
+              <div class="dropzone-content" id="dropzone-content">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--cyan);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <div class="dropzone-text">
+                  <div class="dropzone-main" id="dropzone-file-name">Click or Drag & Drop Media to Verify</div>
+                  <div class="dropzone-sub" id="dropzone-file-meta">Auto-detects Image (JPEG/PNG/WEBP) or Video (MP4/WebM/AVI)</div>
+                </div>
+                <span class="badge-tag" id="media-type-badge" style="display: none;">IMAGE</span>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="action-btn-row">
+              <button class="btn-primary" id="start-scan-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                RUN VERIFICATION PIPELINE
+              </button>
+              <button class="btn-secondary" id="benchmark-sample-btn" title="Quickly load pre-packaged AI deepfake/impersonation benchmark example">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 8 8 12 12 16 12 8"/><line x1="16" y1="12" x2="12" y2="12"/></svg>
+                Load AI Benchmark Example
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN PANELS -->
+        <div class="right-column-stack">
+
+          <!-- 1. FACE QUEUE & DEDUPLICATION PANEL (PRD SECTION 11) -->
+          <div class="queue-card">
+            <div class="card-header">
+              <span class="card-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Face Queue & Intra-Content Dedup
+              </span>
+              <span class="badge-tag" id="queue-count-badge">0 QUEUED</span>
+            </div>
+            <div class="queue-items-container" id="queue-container">
+              <div class="empty-queue-hint" id="empty-queue-hint">No detected faces currently enqueued</div>
+            </div>
+          </div>
+
+          <!-- 2. VECTOR PROJECTION & COSINE ALIGNMENT (Radar animation removed) -->
+          <div class="vector-card">
+            <div class="card-header" style="padding: 0 0 12px 0; border: none; background: transparent;">
+              <span class="card-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+                Vector Projection & Cosine Alignment
+              </span>
+              <span class="badge-tag" id="vector-dim-badge">128-DIM FAISS</span>
+            </div>
+
+            <div class="vector-clean-container">
+              <!-- Top Row: Metric & Status -->
+              <div class="vector-top-metrics">
+                <div>
+                  <div class="sim-label">Cosine Similarity Score</div>
+                  <div class="sim-value" id="sim-score-val">0.0%</div>
+                </div>
+                <div style="text-align: right;">
+                  <span class="face-status-badge queued" id="vector-status-badge">WAITING</span>
+                  <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;" id="target-threshold-info">
+                    THRESHOLD: 50.0%
+                  </div>
+                </div>
+              </div>
+
+              <!-- 32-channel Normalized Feature Spectrum -->
+              <div style="margin: 12px 0 6px 0;">
+                <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-bottom: 4px;">
+                  <span>128-D FEATURE PROJECTION SPECTRUM (32 CHANNELS)</span>
+                  <span id="vector-norm-label">L2-NORMALIZED</span>
+                </div>
+                <div class="vector-bars-preview" id="vector-bars-preview">
+                  <!-- Dynamically rendered 32 bars -->
+                </div>
+              </div>
+
+              <!-- Target info banner -->
+              <div class="matched-target-banner">
+                <span id="target-registrant-name">IDLE: WAITING FOR QUERY</span>
+                <span id="target-margin-info" style="color: var(--cyan);">MARGIN: +0.0%</span>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- 3. SCROLLING MONOSPACE TECHNICAL LOG -->
+          <div class="log-card">
+            <div class="card-header">
+              <span class="card-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                Live Pipeline Telemetry Stream
+              </span>
+              <div class="log-filter-row">
+                <button class="log-filter-btn active" data-filter="all">ALL</button>
+                <button class="log-filter-btn" data-filter="matches">MATCHES</button>
+                <button class="log-filter-btn" data-filter="dedup">DEDUP</button>
+              </div>
+            </div>
+            <div class="terminal-stream" id="terminal-stream">
+              <div class="log-entry info"><span class="time">[00:00:00]</span> <span class="msg">Warden Core initialized. FAISS IndexFlatIP loaded in local memory.</span></div>
+              <div class="log-entry info"><span class="time">[00:00:00]</span> <span class="msg">YuNet DNN Face Detector & SFace Recognizer online. Ready for ingestion.</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FINAL VERDICT BANNER (PRD SECTION 11) -->
+      <div class="verdict-banner-container" id="verdict-banner">
+        <div class="verdict-header">
+          <div>
+            <div class="verdict-tag" id="verdict-main-tag">[VERDICT: UPLOAD BLOCKED]</div>
+            <p id="verdict-desc-text" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">
+              Content contains unauthorized likeness matching registered individual.
+            </p>
+          </div>
+          <button class="btn-secondary" id="dismiss-verdict-btn" style="padding: 6px 14px; font-size: 0.75rem;">
+            DISMISS
+          </button>
+        </div>
+
+        <div class="verdict-details-grid">
+          <div>
+            <div class="v-metric-label">POLICY VERDICT</div>
+            <div class="v-metric-val" id="verdict-policy-val">BLOCK</div>
+          </div>
+          <div>
+            <div class="v-metric-label">REGISTERED MATCHES</div>
+            <div class="v-metric-val" id="verdict-matches-val">1</div>
+          </div>
+          <div>
+            <div class="v-metric-label">UNIQUE IDENTITIES</div>
+            <div class="v-metric-val" id="verdict-unique-val">1</div>
+          </div>
+          <div>
+            <div class="v-metric-label">TOTAL FRAMES / FACES</div>
+            <div class="v-metric-val" id="verdict-detections-val">8</div>
+          </div>
+        </div>
+
+        <!-- Ledger Audit Details Table (Only displayed in Ledger mode or when matches exist) -->
+        <div id="ledger-table-wrapper" style="display: none;">
+          <h4 style="font-family: var(--font-mono); font-size: 0.8rem; margin-top: 18px; color: var(--text-secondary);">
+            COMPLIANCE AUDIT LEDGER (GDPR ART. 9 / DPDP AUDIT TRAIL)
+          </h4>
+          <table class="ledger-audit-table">
+            <thead>
+              <tr>
+                <th>FACE ID</th>
+                <th>REGISTERED INDIVIDUAL</th>
+                <th>AFFILIATION</th>
+                <th>CONSENT ID</th>
+                <th>SIMILARITY</th>
+                <th>FRAME / TIME</th>
+              </tr>
+            </thead>
+            <tbody id="ledger-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: REGISTRATION MODULE (SECTION 7 EXPANDED UX) -->
+    <!-- ========================================== -->
+    <section class="tab-content" id="tab-registration">
+      <div class="registration-container">
+
+        <!-- WEBCAM & GUIDE OVAL -->
+        <div class="webcam-viewport-card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Live Biometric Capture Preview
+            </span>
+            <span class="badge-tag" id="webcam-status-badge">CAMERA OFFLINE</span>
+          </div>
+
+          <div class="camera-feed-box">
+            <video id="webcam-video" autoplay playsinline muted></video>
+            <canvas id="webcam-overlay"></canvas>
+
+            <!-- Camera Flash Shutter Overlay -->
+            <div class="camera-flash-overlay" id="camera-flash"></div>
+
+            <!-- Auto-Snap Indicator Badge -->
+            <div class="auto-snap-countdown-badge" id="auto-snap-badge" style="display: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span id="auto-snap-badge-text">AUTO-SNAPPING IN 1s...</span>
+            </div>
+
+            <svg class="guide-oval-svg" id="guide-oval" viewBox="0 0 100 130">
+              <ellipse cx="50" cy="65" rx="42" ry="55" />
+            </svg>
+
+            <!-- Real-time Face Validation Banner -->
+            <div id="face-detection-banner" style="position: absolute; bottom: 12px; left: 16px; right: 16px; z-index: 10; display: none; background: rgba(11, 29, 54, 0.92); backdrop-filter: blur(8px); border: 1px solid var(--border-bright); border-radius: 6px; padding: 7px 12px; font-family: var(--font-mono); font-size: 0.75rem; text-align: center; color: var(--text-main); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+              <span id="face-detection-status-text">Position face inside guide oval</span>
+            </div>
+
+            <!-- Standby Placeholder if webcam not started -->
+            <div class="viewport-placeholder" id="webcam-placeholder">
+              <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+              </svg>
+              <div>
+                <strong style="color: var(--text-main);">Camera Inactive</strong><br>
+                <span style="font-size: 0.8rem; font-family: var(--font-mono);">Click below to activate live guided enrolment or simulate capture</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="controls-bar">
+            <div class="action-btn-row">
+              <button class="btn-primary" id="activate-webcam-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                ACTIVATE WEBCAM
+              </button>
+              <button class="btn-secondary" id="capture-step-btn" disabled>
+                CAPTURE STEP
+              </button>
+              <button class="btn-secondary" id="reset-captures-btn" title="Refresh or start a fresh face capture sequence">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                START NEW CAPTURE
+              </button>
+              <label class="auto-snap-toggle-wrap" id="auto-snap-toggle-label" title="Automatically captures photo when face meets correct alignment criteria">
+                <input type="checkbox" id="auto-snap-checkbox" checked>
+                <span>⚡ AUTO-SNAP</span>
+              </label>
+              <button class="btn-secondary" id="simulate-reg-btn" title="Simulates complete 4-step registration using sample dataset without camera">
+                SIMULATE CAPTURE
+              </button>
+            </div>
+          </div>
+
+          <!-- Face Verification Diagnostics & Reason Feedback Card -->
+          <div class="reg-diagnostics-card" id="reg-diagnostics-card">
+            <div class="diag-header-row">
+              <span class="diag-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Biometric Verification Diagnostics & Gate
+              </span>
+              <span class="badge-tag" id="reg-gate-status-badge">GATE: STANDBY</span>
+            </div>
+
+            <!-- 4 Real-time Diagnostic Chips -->
+            <div class="diag-chips-grid">
+              <div class="diag-chip" id="chip-face-detect">
+                <span class="chip-dot"></span>
+                <span class="chip-label">Face Presence:</span>
+                <span class="chip-val" id="chip-face-val">Not Detected</span>
+              </div>
+              <div class="diag-chip" id="chip-centering">
+                <span class="chip-dot"></span>
+                <span class="chip-label">Guide Alignment:</span>
+                <span class="chip-val" id="chip-center-val">Center in Oval</span>
+              </div>
+              <div class="diag-chip" id="chip-pose">
+                <span class="chip-dot"></span>
+                <span class="chip-label">Step Pose/Smile:</span>
+                <span class="chip-val" id="chip-pose-val">Frontal Neutral</span>
+              </div>
+              <div class="diag-chip" id="chip-liveness">
+                <span class="chip-dot"></span>
+                <span class="chip-label">Liveness & Format:</span>
+                <span class="chip-val" id="chip-liveness-val">Ready</span>
+              </div>
+            </div>
+
+            <!-- Detailed Diagnostic Guidance & Failure Explanations -->
+            <div class="diag-guidance-box" id="diag-guidance-box">
+              <div class="diag-icon-col" id="diag-icon-col">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="diag-msg-col">
+                <div class="diag-primary-msg" id="diag-primary-msg">Waiting for camera activation or photo upload.</div>
+                <div class="diag-detail-msg" id="diag-detail-msg">Step advancement is locked until biometric conditions are satisfied. Non-supported or corrupt files are rejected.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GUIDED STEP TRACKER & FORM -->
+        <div class="registration-sidebar">
+
+          <!-- STEP PROGRESSION (PRD SECTION 7) -->
+          <div class="step-tracker-card">
+            <div class="progress-ring-row">
+              <div class="ring-text-box">
+                <div class="ring-title" id="reg-progress-percent">0% COMPLETE</div>
+                <div class="ring-sub" id="reg-progress-sub">Step 1 of 4: Frontal Neutral</div>
+              </div>
+            </div>
+
+            <!-- Steps list -->
+            <div class="steps-list">
+              <div class="step-item active" id="step-item-1">
+                <div class="step-number">1</div>
+                <div>
+                  <strong>Frontal Neutral</strong>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Look directly at camera, neutral facial expression</div>
+                </div>
+              </div>
+              <div class="step-item" id="step-item-2">
+                <div class="step-number">2</div>
+                <div>
+                  <strong>Slight Left Turn (~15–20°)</strong>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Gently turn head slightly to the left</div>
+                </div>
+              </div>
+              <div class="step-item" id="step-item-3">
+                <div class="step-number">3</div>
+                <div>
+                  <strong>Slight Right Turn (~15–20°)</strong>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Gently turn head slightly to the right</div>
+                </div>
+              </div>
+              <div class="step-item" id="step-item-4">
+                <div class="step-number">4</div>
+                <div>
+                  <strong>Smiling Expression</strong>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Natural smile to average out facial expression variation</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Liveness check cue box -->
+            <div class="liveness-cue-box" style="margin-top: 16px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span><strong>Liveness Check:</strong> Micro-movement & multi-angle verification active. Static photo replay attacks prevented.</span>
+            </div>
+          </div>
+
+          <!-- BIOMETRIC CONSENT & ENROLMENT FORM -->
+          <div class="consent-form-box">
+            <h4 style="font-family: var(--font-display); font-size: 1.1rem; color: var(--text-main);">
+              Biometric Consent & Registry Enrolment
+            </h4>
+
+            <div class="input-group">
+              <label class="input-label">FULL NAME *</label>
+              <input type="text" class="text-input" id="reg-name-input" placeholder="Enter full name" value="" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">AFFILIATION / ROLE</label>
+              <input type="text" class="text-input" id="reg-affil-input" placeholder="Enter organization, role, or affiliation (optional)" value="" autocomplete="off">
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">ALLOWLIST HANDLES / CHANNELS (OPTIONAL)</label>
+              <input type="text" class="text-input" id="reg-allowlist-input" placeholder="Platform usernames or channel IDs (comma-separated, optional)" value="" autocomplete="off">
+            </div>
+
+            <label class="consent-checkbox-row">
+              <input type="checkbox" id="reg-consent-checkbox" checked>
+              <span>
+                I explicitly grant biometric consent under <strong>GDPR Article 9</strong> and <strong>India's Digital Personal Data Protection (DPDP) Act</strong> for Warden to extract and index mathematical vector embeddings of my facial geometry. I understand raw images are discarded immediately, embeddings are stored only to gate unauthorized uploads, and I may revoke this consent at any time.
+              </span>
+            </label>
+
+            <button class="btn-primary" id="commit-registration-btn" disabled>
+              COMMIT EMBEDDINGS TO FAISS REGISTRY
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: CONSENT & REGISTRY MANAGEMENT (SECTION 12 & 13) -->
+    <!-- ========================================== -->
+    <section class="tab-content" id="tab-registry">
+      <div class="registry-header-row">
+        <div>
+          <h2 style="font-family: var(--font-display); font-size: 1.6rem; letter-spacing: 0.05em;">
+            Likeness Registry & Trust Dashboard
+          </h2>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; font-family: var(--font-mono); margin-top: 4px;">
+            Self-serve consent lifecycle, vector index statistics, and revocable likeness protection.
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div id="auto-refresh-indicator" class="badge-tag" style="display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--emerald); border-color: rgba(42, 157, 143, 0.35); background: var(--emerald-muted);">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); display: inline-block; box-shadow: 0 0 6px var(--emerald);"></span>
+            AUTO-SYNC
+          </div>
+          <button class="btn-secondary" id="refresh-registry-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            REFRESH NOW
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card registrants">
+          <div class="stat-header">
+            <span class="stat-label">TOTAL REGISTRANTS</span>
+            <span class="stat-pill-badge">LEDGER</span>
+          </div>
+          <div class="stat-number" id="stat-total-regs">0</div>
+          <div class="stat-subtext">Verified opted-in likenesses</div>
+        </div>
+        <div class="stat-card active-prot">
+          <div class="stat-header">
+            <span class="stat-label">ACTIVE PROTECTIONS</span>
+            <span class="stat-pill-badge emerald">ENFORCING</span>
+          </div>
+          <div class="stat-number" style="color: var(--emerald);" id="stat-active-regs">0</div>
+          <div class="stat-subtext">Consent-locked biometric records</div>
+        </div>
+        <div class="stat-card vectors">
+          <div class="stat-header">
+            <span class="stat-label">INDEXED FAISS VECTORS</span>
+            <span class="stat-pill-badge cyan">IN-MEMORY</span>
+          </div>
+          <div class="stat-number" style="color: var(--cyan);" id="stat-indexed-vectors">0</div>
+          <div class="stat-subtext">IndexFlatIP cosine similarity space</div>
+        </div>
+        <div class="stat-card dimension">
+          <div class="stat-header">
+            <span class="stat-label">VECTOR DIMENSION</span>
+            <span class="stat-pill-badge amber">SFACE L2</span>
+          </div>
+          <div class="stat-number" style="color: var(--amber);" id="stat-vector-dim">128-D</div>
+          <div class="stat-subtext">Normalized unit feature vectors</div>
+        </div>
+      </div>
+
+      <!-- Registrants Table Card -->
+      <div class="registrant-table-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="card-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Registered Likeness Ledger
+            </span>
+            <!-- Interactive DPDP Art. 9 Compliance Hover Box -->
+            <div class="dpdp-badge-box" id="dpdp-badge-box" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" title="Hover to inspect DPDP Act 2023 & GDPR Art. 9 statutory details">
+              <span class="badge-tag dpdp-badge-trigger">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                DPDP ART. 9 COMPLIANT
+                <svg class="dpdp-info-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </span>
+
+              <!-- Hover Card: Comprehensive Details of the Act -->
+              <div class="dpdp-popover-card" id="dpdp-popover-card" role="tooltip">
+                <div class="dpdp-popover-header">
+                  <div class="dpdp-popover-title-row">
+                    <div class="dpdp-popover-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                    </div>
+                    <div>
+                      <div class="dpdp-popover-title">Digital Personal Data Protection (DPDP) Act, 2023 &amp; GDPR Art. 9</div>
+                      <div class="dpdp-popover-subtitle">Statutory Compliance &amp; Biometric Governance Architecture</div>
+                    </div>
+                  </div>
+                  <span class="dpdp-popover-status-badge">LEGAL SPECIFICATION</span>
+                </div>
+
+                <div class="dpdp-popover-body">
+                  <!-- Section 1: India DPDP Act 2023 -->
+                  <div class="dpdp-section">
+                    <div class="dpdp-section-header">
+                      <span class="dpdp-sec-num">01</span>
+                      <strong class="dpdp-sec-name">Digital Personal Data Protection (DPDP) Act, 2023 (India)</strong>
+                    </div>
+                    <ul class="dpdp-clause-list">
+                      <li>
+                        <span class="dpdp-clause-tag">Section 4 &amp; 6</span>
+                        <div><strong>Explicit, Informed Consent:</strong> Biometric facial data is processed strictly with unambiguous, affirmative consent from the data principal for the specified fraud prevention purpose.</div>
+                      </li>
+                      <li>
+                        <span class="dpdp-clause-tag">Section 8(7)</span>
+                        <div><strong>Zero Raw Media Retention:</strong> Personal data must be erased as soon as the specified purpose is fulfilled. Raw photos/video streams are discarded immediately from memory post-inference; only one-way vector embeddings are preserved.</div>
+                      </li>
+                      <li>
+                        <span class="dpdp-clause-tag">Section 12 &amp; 13</span>
+                        <div><strong>Right to Withdraw &amp; Erasure:</strong> Data principals have an absolute right to revoke consent at any time. Revocation triggers instant and permanent purging of vector records from the active FAISS index.</div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- Section 2: GDPR Article 9 -->
+                  <div class="dpdp-section">
+                    <div class="dpdp-section-header">
+                      <span class="dpdp-sec-num">02</span>
+                      <strong class="dpdp-sec-name">EU General Data Protection Regulation (GDPR) — Article 9</strong>
+                    </div>
+                    <ul class="dpdp-clause-list">
+                      <li>
+                        <span class="dpdp-clause-tag">Article 9(1) &amp; (2)(a)</span>
+                        <div><strong>Special Category Biometric Processing:</strong> Processing of biometric data for uniquely identifying natural persons is strictly prohibited unless explicit, voluntary, and revocable consent is obtained.</div>
+                      </li>
+                      <li>
+                        <span class="dpdp-clause-tag">Article 17</span>
+                        <div><strong>Right to be Forgotten:</strong> Immediate mathematical and cryptographic deletion of biometric embeddings across all persistent stores upon withdrawal of consent.</div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- Section 3: Technical Implementation in Warden -->
+                  <div class="dpdp-section highlight">
+                    <div class="dpdp-section-header">
+                      <span class="dpdp-sec-num">03</span>
+                      <strong class="dpdp-sec-name">Warden Technical Enforcement Mechanism</strong>
+                    </div>
+                    <div class="dpdp-tech-grid">
+                      <div class="dpdp-tech-item">
+                        <span class="dpdp-tech-label">One-Way Embeddings</span>
+                        <span class="dpdp-tech-val">128-D SFace unit vectors cannot reverse-engineer or reconstruct original faces.</span>
+                      </div>
+                      <div class="dpdp-tech-item">
+                        <span class="dpdp-tech-label">Consent Certificate</span>
+                        <span class="dpdp-tech-val">Unique immutable audit hash (<code>DPDP-ART9-XXXXXXXXXXXX</code>) issued per registrant.</span>
+                      </div>
+                      <div class="dpdp-tech-item">
+                        <span class="dpdp-tech-label">Atomic Purging</span>
+                        <span class="dpdp-tech-val">Revocation physically wipes SQLite records and completely reconstructs FAISS index in &lt;10ms.</span>
+                      </div>
+                      <div class="dpdp-tech-item">
+                        <span class="dpdp-tech-label">Domain Allowlists</span>
+                        <span class="dpdp-tech-val">Registrants control which platforms/channels are authorized to broadcast their likeness.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dpdp-popover-footer">
+                  <div class="dpdp-footer-meta">
+                    <span class="dpdp-dot active"></span>
+                    <span>Audit Status: <strong style="color: var(--emerald);">100% Compliant</strong></span>
+                    <span style="opacity: 0.4;">|</span>
+                    <span>Framework: <strong>DPDP Act 2023 &bull; GDPR Art. 9 &bull; ISO/IEC 27701</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi-Select Bulk Actions Toolbar -->
+          <div id="bulk-actions-toolbar" style="display: none; align-items: center; gap: 10px;">
+            <span id="bulk-selection-count" style="font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; color: var(--text-main);">0 selected</span>
+            <button class="btn-secondary" id="bulk-revoke-btn" style="padding: 6px 14px; font-size: 0.75rem; border-color: var(--crimson); color: var(--crimson); background: var(--crimson-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              REVOKE & REMOVE SELECTED (<span id="bulk-count-badge">0</span>)
+            </button>
+            <button class="btn-secondary" id="bulk-cancel-btn" style="padding: 6px 12px; font-size: 0.75rem; cursor: pointer;">
+              DESELECT ALL
+            </button>
+          </div>
+        </div>
+
+        <table class="ledger-audit-table">
+          <thead>
+            <tr>
+              <th style="width: 44px; text-align: center;">
+                <input type="checkbox" id="select-all-regs" title="Select All Registrants" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);">
+              </th>
+              <th>REGISTRANT ID</th>
+              <th>NAME</th>
+              <th>AFFILIATION</th>
+              <th>CONSENT CERTIFICATE</th>
+              <th>ENROLLED AT</th>
+              <th>EXPIRY DATE</th>
+              <th>VECTORS</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="registrants-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: ARCHITECTURE & SPECS (SECTION 6, 8, 15) -->
+    <!-- ========================================== -->
+    <section class="tab-content" id="tab-architecture">
+      <div class="arch-grid-container">
+
+        <div class="arch-back-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle);">
+          <button class="btn-secondary" id="arch-close-btn" style="padding: 7px 14px; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 7px; cursor: pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            RETURN TO PREVIOUS VIEW
+          </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge-tag">SYSTEM ARCHITECTURE REFERENCE</span>
+          </div>
+        </div>
+
+        <div>
+          <h2 style="font-family: var(--font-display); font-size: 1.6rem; letter-spacing: -0.01em;">
+            System Architecture & Pipeline Mechanics
+          </h2>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; font-family: var(--font-mono); margin-top: 4px;">
+            Deterministic Geometric Likeness Verification vs. Heuristic Authenticity Classification.
+          </p>
+        </div>
+
+        <!-- 1. Paradigm Comparison Card -->
+        <div class="arch-section-card">
+          <div class="arch-header-row">
+            <div>
+              <div class="arch-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Paradigm Comparison: Fraud Detection Architectures
+              </div>
+              <div class="arch-subtitle" style="margin-top: 2px;">Solving the tractable facial likeness signal rather than the adversarial "AI vs Real" classification arms race</div>
+            </div>
+            <span class="badge-tag">DEFENSE MATRIX</span>
+          </div>
+
+          <table class="ledger-audit-table" style="margin-top: 0;">
+            <thead>
+              <tr>
+                <th style="width: 22%;">APPROACH</th>
+                <th style="width: 26%;">CORE MECHANISM</th>
+                <th style="width: 26%;">CRITICAL VULNERABILITY</th>
+                <th style="width: 26%;">WARDEN'S ADVANTAGE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Hash Matching</strong><br><span style="font-size: 0.68rem; color: var(--text-muted); font-family: var(--font-mono);">(e.g. StopNCII, PhotoDNA)</span></td>
+                <td>Cryptographic hash (PDQ/MD5) of known original images</td>
+                <td><span style="color: var(--crimson);">Fails entirely</span> on synthetic generation or re-renders (no original hash exists)</td>
+                <td>Matches underlying facial geometry even across freshly synthesized frames</td>
+              </tr>
+              <tr>
+                <td><strong>Deepfake Classifiers</strong><br><span style="font-size: 0.68rem; color: var(--text-muted); font-family: var(--font-mono);">(CNN / Transformer Detectors)</span></td>
+                <td>Classifies "real vs fake" artifacts (frequency, blending, blinking)</td>
+                <td><span style="color: var(--amber);">Fragile arms race</span>; rapidly bypassed by newer diffusion models, compression, or filters</td>
+                <td>Facial geometry is stable and model-agnostic; invariant to synthesis engines</td>
+              </tr>
+              <tr>
+                <td style="color: var(--emerald); font-weight: 700;">
+                  <strong>Warden Framework</strong><br>
+                  <span style="font-size: 0.68rem; color: var(--emerald); font-family: var(--font-mono);">CONSENT VECTOR LEDGER</span>
+                </td>
+                <td>Consent-based FAISS vector indexing of protected biometric profiles</td>
+                <td>Adversarial occlusions or extreme head poses (>60°) require multi-frame tracking</td>
+                <td><span style="color: var(--emerald); font-weight: 600;">Sub-linear scaling (<2ms)</span>, deterministic gating, zero raw image storage</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 2. The 7-Stage Moderation & Gating Pipeline -->
+        <div class="arch-section-card">
+          <div class="arch-header-row">
+            <div>
+              <div class="arch-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                The 7-Stage Moderation & Gating Pipeline
+              </div>
+              <div class="arch-subtitle" style="margin-top: 2px;">Low-latency sequential architecture optimized for continuous stream ingestion</div>
+            </div>
+            <span class="badge-tag">SLA &lt; 30MS / FRAME</span>
+          </div>
+
+          <div class="pipeline-stages-flow">
+            <div class="stage-flow-card accent-cyan">
+              <div class="stage-badge-col">
+                <span class="stage-num-tag">STAGE 01</span>
+                <span class="stage-time-tag">&lt; 3.0 ms</span>
+              </div>
+              <div class="stage-body-col">
+                <div class="stage-name-row">
+                  <span class="stage-name-text">Resolution-Tiered Preprocessing</span>
+                  <span class="stage-badge-pill">DYNAMIC DOWNSCALE</span>
+                </div>
+                <div class="stage-desc-text">Dynamic scale capping to 640p/720p maintains deterministic sub-30ms execution budgets regardless of input source resolution (4K, 1080p, or 720p).</div>
+              </div>
+            </div>
+
+            <div class="stage-flow-card accent-cyan">
+              <div class="stage-badge-col">
+                <span class="stage-num-tag">STAGE 02</span>
+                <span class="stage-time-tag">TEMPORAL</span>
+              </div>
+              <div class="stage-body-col">
+                <div class="stage-name-row">
+                  <span class="stage-name-text">Adaptive Temporal Sampling</span>
+                  <span class="stage-badge-pill">2.5 FPS / SCENE CUT</span>
+                </div>
+                <div class="stage-desc-text">Intelligent frame stride decimation samples video content at 2.5 frames/sec, avoiding redundant frame extraction while guaranteeing full sequence coverage.</div>
+              </div>
+            </div>
+
+            <div class="stage-flow-card accent-cyan">
+              <div class="stage-badge-col">
+                <span class="stage-num-tag">STAGE 03</span>
+                <span class="stage-time-tag">~ 12.5 ms</span>
+              </div>
+              <div class="stage-body-col">
+                <div class="stage-name-row">
+                  <span class="stage-name-text">Per-Frame Face Detection (YuNet)</span>
+                  <span class="stage-badge-pill">5-PT LANDMARKS</span>
+                </div>
+                <div class="stage-desc-text">Stateless neural face detection with OpenCV DNN YuNet extracts 5 key facial coordinates (eyes, nose, mouth corners) with robust handling of occlusions and cuts.</div>
+              </div>
+            </div>
+
+            <div class="stage-flow-card accent-amber">
+              <div class="stage-badge-col">
+                <span class="stage-num-tag" style="color: var(--amber);">STAGE 04</span>
+                <span class="stage-time-tag">&lt; 0.5 ms</span>
+              </div>
+              <div class="stage-body-col">
+                <div class="stage-name-row">
+                  <span class="stage-name-text">Intra-Content Identity Deduplication</span>
+                  <span class="stage-badge-pill" style="color: var(--amber);">82% QUERY REDUCTION</span>
+                </div>
+                <div class="stage-desc-text">Faces matched against previously identified session embeddings within the same content are immediately cached, bypassing downstream FAISS registry queries.</div>
+              </div>
+            </div>
+
+            <div class="stage-flow-card accent-cyan">
+              <div class="stage-badge-col">
+                <span class="stage-num-tag">STAGE 05</span>
+                <span class="stage-time-tag">ASYNC</span>
+              </div>
+              <div class="stage-body-col">
+                <div class="stage-name-row">
+                  <span class="stage-name-text">Pipelined Asynchronous Dispatch</span>
+                  <span class="stage-badge-pill">ASYNCIO QUEUE</span>
+                </div>
+                <div class="stage-desc-text">Embedding generation and vector comparison execute concurrently with continuous video decoding, maximizing CPU/GPU hardware saturation.</div>
+              </div>
+            </div>
+
+            <div class="stage-flow-card accent-cyan">
+              <div class="stage-badge-col">
+                <span class="stage-num-tag">STAGE 06</span>
+                <span class="stage-time-tag">&lt; 1.8 ms</span>
+              </div>
+              <div class="stage-body-col">
+                <div class="stage-name-row">
+                  <span class="stage-name-text">Approximate Nearest-Neighbor (FAISS)</span>
+                  <span class="stage-badge-pill">INDEXFLATIP 128-D</span>
+                </div>
+                <div class="stage-desc-text">Sub-linear cosine similarity search across in-memory L2-normalized SFace feature representations with calibrated 50% decision boundary.</div>
+              </div>
+            </div>
+
+            <div class="stage-flow-card accent-crimson">
+              <div class="stage-badge-col">
+                <span class="stage-num-tag" style="color: var(--crimson);">STAGE 07</span>
+                <span class="stage-time-tag">INSTANT</span>
+              </div>
+              <div class="stage-body-col">
+                <div class="stage-name-row">
+                  <span class="stage-name-text">Dual-Mode Gating & Verdict Formulation</span>
+                  <span class="stage-badge-pill" style="color: var(--crimson);">GUARD / LEDGER</span>
+                </div>
+                <div class="stage-desc-text">Guard mode issues instant Block/Pass gating decisions with optional Early-Exit; Ledger mode generates full forensic DPDP/GDPR timestamped compliance records.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Enterprise Hardware & Project Details Card -->
+        <div class="arch-section-card">
+          <div class="arch-header-row">
+            <div>
+              <div class="arch-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                System Specifications & Compliance Charter
+              </div>
+              <div class="arch-subtitle" style="margin-top: 2px;">Production infrastructure parameters and privacy engineering guarantees</div>
+            </div>
+            <span class="badge-tag">HACKATHENA 2.0</span>
+          </div>
+
+          <div class="specs-meta-grid">
+            <div class="spec-box-item">
+              <div class="spec-box-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 8 8 12 12 16 12 8"/></svg>
+                EVENT & RESEARCH THEME
+              </div>
+              <div class="spec-box-val">HackAthena 2.0 — Detection and Prevention of AI-Based Frauds</div>
+              <div class="spec-box-sub">National Level AI Innovation Challenge</div>
+            </div>
+
+            <div class="spec-box-item">
+              <div class="spec-box-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                ENGINEERING TEAM & CITATION
+              </div>
+              <div class="spec-box-val">Team TITANS — Anandhu A, Akshay B A, Joshy Bovas, Manu V S</div>
+              <div class="spec-box-sub">Core AI Systems Engineering // Biometric Security</div>
+            </div>
+
+            <div class="spec-box-item">
+              <div class="spec-box-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                NEURAL INFERENCE & VECTOR ENGINE
+              </div>
+              <div class="spec-box-val">OpenCV DNN YuNet + SFace (128-D L2) + FAISS CPU (IndexFlatIP)</div>
+              <div class="spec-box-sub">In-Memory Cosine Similarity // Sub-Linear ANN Search</div>
+            </div>
+
+            <div class="spec-box-item">
+              <div class="spec-box-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                PRIVACY ARCHITECTURE & DATA GOVERNANCE
+              </div>
+              <div class="spec-box-val">Zero Raw Image Storage. Mathematical Embeddings Only.</div>
+              <div class="spec-box-sub">India DPDP Act 2023 & GDPR Art. 9 Compliant // Self-Serve Revocable</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB: DEPLOYMENT CONSOLE (OPERATOR RUNTIME CONTROL) -->
+    <!-- ========================================== -->
+    <section class="tab-content" id="tab-console">
+      <div class="deploy-console-card">
+        
+        <!-- ELEMENT 1: THREE MODE CONTROLS (STYLED AS TOGGLE BUTTONS) -->
+        <div class="console-group">
+          <label class="console-label">SYSTEM OPERATION MODE</label>
+          <div class="console-mode-toggles">
+            <button type="button" class="console-toggle-btn active" id="console-mode-guard" data-mode="guard" data-early="false" title="GUARD: Real-time upload gating. Evaluates media frames and returns immediate Pass/Block verdict only.">
+              <span>GUARD</span>
+              <span class="mode-info-icon" title="GUARD: Real-time upload gating. Evaluates media frames and returns immediate Pass/Block verdict only.">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </span>
+            </button>
+            <button type="button" class="console-toggle-btn" id="console-mode-ledger" data-mode="ledger" data-early="false" title="LEDGER: Full-scan compliance/audit mode. Returns every registered match found across all frames.">
+              <span>LEDGER</span>
+              <span class="mode-info-icon" title="LEDGER: Full-scan compliance/audit mode. Returns every registered match found across all frames under GDPR/DPDP rules.">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </span>
+            </button>
+            <button type="button" class="console-toggle-btn" id="console-mode-early" data-mode="guard" data-early="true" title="EARLY EXIT: Secondary Guard toggle. Stops processing immediately when first match is confirmed. Visually disabled in Ledger mode.">
+              <span>EARLY EXIT</span>
+              <span class="mode-info-icon" title="EARLY EXIT: Secondary Guard toggle. Stops processing immediately when first match is confirmed. Visually disabled in Ledger mode.">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ELEMENT 2: INPUT PIPELINE (PLAIN TEXT) -->
+        <div class="console-group">
+          <label class="console-label" for="console-input-pipeline">INPUT PIPELINE</label>
+          <input type="text" id="console-input-pipeline" class="console-input" spellcheck="false" value="https://api.platform.internal/v1/uploads/webhook" placeholder="webhook endpoint or queue address (e.g. kafka://ingest.cluster.local:9092/uploads)">
+        </div>
+
+        <!-- ELEMENT 3: REGISTRY DATABASE (MASKED PASSWORD INPUT) -->
+        <div class="console-group">
+          <label class="console-label" for="console-registry-db">REGISTRY DATABASE</label>
+          <input type="password" id="console-registry-db" class="console-input" spellcheck="false" value="faiss+tls://app_warden_svc:k9941_faiss_x88421_prod_token@registry-node.corp.internal:9200/prod-biometrics" placeholder="connection string or credentials (e.g. faiss+tls://key:secret@host:port/db)">
+        </div>
+
+        <!-- ELEMENT 4: OPERATOR TERMINAL / CONSOLE PANEL -->
+        <div class="console-group terminal-group">
+          <div class="console-term-header">
+            <span class="console-label" style="margin-bottom: 0;">RUNTIME CONSOLE TERMINAL</span>
+            <span class="badge-tag" id="cli-status-badge">ONLINE // PORT 8000</span>
+          </div>
+          <div class="console-term-screen" id="console-cli-output">
+            <div class="term-line sys">WARDEN RUNTIME CONTROL PANEL v2.0 — OPERATOR TERMINAL INITIALIZED</div>
+            <div class="term-line sys">Type 'help' for command reference, or run mode commands ('guard', 'ledger', 'early-exit on/off').</div>
+            <div class="term-line info">Current mode: GUARD (Early Exit: OFF) | Pipeline: Active | FAISS Index: Ready</div>
+          </div>
+          <form class="console-term-form" id="console-cli-form">
+            <span class="term-prompt-prefix">operator@warden:~$</span>
+            <input type="text" id="console-cli-input" class="console-term-input" autocomplete="off" spellcheck="false" placeholder="type command (e.g. status, guard, ledger, early-exit on, restart, ping)...">
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MODAL: DUPLICATE FACE VERIFICATION & COMPARISON -->
+    <!-- ========================================== -->
+    <div class="modal-backdrop" id="duplicate-modal" style="display: none;">
+      <div class="modal-dialog duplicate-dialog">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="modal-icon-warning">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div>
+              <h3 class="modal-title">Similar Likeness Detected in Registry</h3>
+              <p class="modal-subtitle">Biometric vector match detected against an existing enrolled profile</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <div class="dup-alert-banner">
+            <span class="dup-match-badge" id="dup-match-badge">94.2% SIMILARITY MATCH</span>
+            <span id="dup-alert-text">The newly captured face matches a profile already registered under DPDP Act consent.</span>
+          </div>
+
+          <div class="dup-comparison-grid">
+            <!-- Left Card: Newly Captured Image -->
+            <div class="dup-card">
+              <div class="dup-card-header">
+                <span class="dup-card-tag new-tag">NEW CAPTURE</span>
+                <span class="dup-card-status">Pending Enrolment</span>
+              </div>
+              <div class="dup-img-wrap">
+                <img id="dup-new-photo" src="" alt="Newly captured face">
+              </div>
+              <div class="dup-card-meta">
+                <div class="dup-meta-name" id="dup-new-name">Current Capture</div>
+                <div class="dup-meta-sub" id="dup-new-steps">4 multi-angle captures</div>
+              </div>
+            </div>
+
+            <!-- Divider with VS -->
+            <div class="dup-vs-divider">
+              <div class="dup-vs-circle">VS</div>
+              <div class="dup-score-callout" id="dup-score-callout">0.00 SIM</div>
+            </div>
+
+            <!-- Right Card: Existing Registered Profile -->
+            <div class="dup-card registered">
+              <div class="dup-card-header">
+                <span class="dup-card-tag existing-tag">ALREADY REGISTERED</span>
+                <span class="dup-card-status active-status" id="dup-reg-status">ACTIVE DPDP CONSENT</span>
+              </div>
+              <div class="dup-img-wrap">
+                <img id="dup-existing-photo" src="" alt="Existing registrant face">
+                <div class="dup-avatar-placeholder" id="dup-existing-placeholder" style="display: none;">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+              </div>
+              <div class="dup-card-meta">
+                <div class="dup-meta-name" id="dup-existing-name">Existing Registrant</div>
+                <div class="dup-meta-sub" id="dup-existing-id">REG-XXXXXXXX</div>
+                <div class="dup-meta-detail" id="dup-existing-affil">Affiliation: Protected Individual</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dup-instructions-box">
+            <strong>Choose Action:</strong>
+            <p>If this is the same individual or an accidental duplicate, click <strong>"Capture Again"</strong> to reset and take new photos. If you want to keep this registration anyway, click <strong>"Keep & Proceed"</strong> to continue.</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" id="dup-capture-again-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            CAPTURE AGAIN
+          </button>
+          <button class="btn-primary" id="dup-keep-proceed-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            KEEP & PROCEED ANYWAY
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div>
+      <strong>WARDEN IDENTITY FRAMEWORK</strong> — HACKATHENA 2.0 (Theme: Detection and Prevention of AI-Based Frauds)
+    </div>
+    <div class="team-badge">
+      TEAM TITANS — Anandhu A, Akshay B A, Joshy Bovas, Manu V S
+    </div>
+  <!-- Floating Notification Toast Container -->
+  <div id="warden-toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

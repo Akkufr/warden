@@ -1,0 +1,209 @@
+/* ==========================================================================
+   WARDEN — Chrome Extension Toolbar Popup Styling
+   ========================================================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 310px;
+  background-color: #0B1D36;
+  background-image: radial-gradient(circle at 50% 0%, #16253B 0%, #0B1D36 85%);
+  color: #F8FAFC;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}
+
+.popup-container {
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  gap: 12px;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #273A52;
+  padding-bottom: 10px;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shield-glyph {
+  width: 22px;
+  height: 22px;
+  color: #00B4D8;
+  filter: drop-shadow(0 0 6px rgba(0, 180, 216, 0.4));
+}
+
+.title-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #F8FAFC;
+  line-height: 1.1;
+}
+
+.brand-sub {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #94A3B8;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  background: #101E30;
+  border: 1px solid #273A52;
+  border-radius: 99px;
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #64748B;
+}
+
+.status-pill.online {
+  border-color: rgba(42, 157, 143, 0.4);
+  color: #2A9D8F;
+}
+
+.status-pill.online .status-dot {
+  background: #2A9D8F;
+  box-shadow: 0 0 6px rgba(42, 157, 143, 0.6);
+}
+
+.status-pill.offline {
+  border-color: rgba(230, 57, 70, 0.4);
+  color: #E63946;
+}
+
+.status-pill.offline .status-dot {
+  background: #E63946;
+}
+
+.popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-card {
+  background: #101E30;
+  border: 1px solid #273A52;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.card-title {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #00B4D8;
+  margin-bottom: 3px;
+}
+
+.card-desc {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #94A3B8;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.stat-box {
+  background: #16253B;
+  border: 1px solid #273A52;
+  border-radius: 6px;
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.stat-val {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #F8FAFC;
+}
+
+.stat-lbl {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 7.5px;
+  color: #64748B;
+  letter-spacing: 0.05em;
+  margin-top: 1px;
+}
+
+.popup-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.primary-btn {
+  background: #00B4D8;
+  border: 1px solid #00B4D8;
+  color: #071324;
+}
+
+.primary-btn:hover {
+  background: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.secondary-btn {
+  background: #16253B;
+  border: 1px solid #273A52;
+  color: #F8FAFC;
+}
+
+.secondary-btn:hover {
+  background: #1E314B;
+  border-color: #3D5575;
+}

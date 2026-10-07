@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Warden Likeness Shield</title>
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    .platform-pills {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .platform-pill {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 4px;
+      background: #16253B;
+      border: 1px solid #273A52;
+      font-size: 9px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-weight: 600;
+    }
+    .platform-pill.ig {
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+    .platform-pill.wa {
+      color: #25d366;
+      border-color: rgba(37, 211, 102, 0.3);
+    }
+    .pill-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <div class="popup-container">
+    <div class="popup-header">
+      <div class="brand-row">
+        <svg class="shield-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4" stroke-width="2.5"/>
+        </svg>
+        <div class="title-stack">
+          <span class="brand-name">WARDEN</span>
+          <span class="brand-sub">LIKENESS SHIELD</span>
+        </div>
+      </div>
+      <div class="status-pill" id="server-status-pill">
+        <span class="status-dot" id="server-dot"></span>
+        <span class="status-label" id="server-status-label">CHECKING...</span>
+      </div>
+    </div>
+
+    <div class="popup-body">
+      <div class="info-card">
+        <div class="card-title">PROTECTION SCOPE</div>
+        <div class="card-desc">
+          Watching Instagram Direct Messages &amp; WhatsApp Web media uploads. Intercepts attachments at client boundary and validates against biometric consent ledger in real time.
+        </div>
+        <div class="platform-pills">
+          <div class="platform-pill ig">
+            <span class="pill-dot"></span> INSTAGRAM DM
+          </div>
+          <div class="platform-pill wa">
+            <span class="pill-dot"></span> WHATSAPP WEB
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val" id="stat-registrants">--</div>
+          <div class="stat-lbl">REGISTRANTS</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-vectors">--</div>
+          <div class="stat-lbl">VECTORS</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-mode">GUARD</div>
+          <div class="stat-lbl">MODE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="popup-footer">
+      <button class="action-btn primary-btn" id="btn-open-dashboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Open Live Dashboard
+      </button>
+      <button class="action-btn secondary-btn" id="btn-open-wa-testbench" style="border-color: rgba(37, 211, 102, 0.4); color: #25d366;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        WhatsApp Web Testbench
+      </button>
+      <button class="action-btn secondary-btn" id="btn-open-testbench" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+        Instagram DM Testbench
+      </button>
+      <button class="action-btn secondary-btn" id="btn-open-ig-registry">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Face Registry Settings
+      </button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

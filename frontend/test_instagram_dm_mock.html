@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram Direct — Mock Chat Attachment Testbench</title>
+  <link rel="stylesheet" href="/extension/content.css">
+  <script src="/extension/content.js" defer></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #000000;
+      color: #F5F5F5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top simulated IG navbar */
+    .ig-header {
+      height: 60px;
+      border-bottom: 1px solid #262626;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: #000000;
+    }
+    .ig-user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ig-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+    }
+    .ig-username {
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .ig-badge-test {
+      font-size: 10px;
+      padding: 3px 8px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 99px;
+      color: #00B4D8;
+      font-family: monospace;
+    }
+
+    /* Main chat scroll container */
+    .ig-chat-area {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .chat-bubble {
+      max-width: 65%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .bubble-incoming {
+      align-self: flex-start;
+      background-color: #262626;
+      color: #fff;
+      border-bottom-left-radius: 4px;
+    }
+    .bubble-outgoing {
+      align-self: flex-end;
+      background-color: #3797f0;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .system-notice {
+      align-self: center;
+      text-align: center;
+      font-size: 11px;
+      color: #737373;
+      background: #121212;
+      padding: 6px 14px;
+      border-radius: 12px;
+      border: 1px solid #262626;
+      max-width: 500px;
+    }
+
+    /* Attached image preview inside chat */
+    .attached-preview-card {
+      align-self: flex-end;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 14px;
+      overflow: hidden;
+      max-width: 240px;
+      margin-top: 4px;
+      animation: fadeIn 0.3s ease;
+    }
+    .attached-preview-card img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      display: block;
+    }
+    .attached-meta {
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #2A9D8F;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Compose input bar at bottom */
+    .ig-composer-container {
+      padding: 16px 20px 24px 20px;
+      background: #000000;
+      border-top: 1px solid #1a1a1a;
+    }
+    .ig-composer-box {
+      border: 1px solid #262626;
+      border-radius: 24px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #121212;
+      transition: border-color 0.2s ease;
+    }
+    .ig-composer-box:focus-within {
+      border-color: #555555;
+    }
+    .ig-input-text {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 14px;
+    }
+    .ig-composer-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ig-icon-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 50%;
+      transition: opacity 0.15s ease;
+    }
+    .ig-icon-btn:hover {
+      opacity: 0.7;
+    }
+    .ig-send-btn {
+      color: #0095f6;
+      font-weight: 600;
+      font-size: 14px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Instructions sidebar / banner */
+    .test-instructions {
+      background: #0B1D36;
+      border-bottom: 1px solid #273A52;
+      padding: 10px 20px;
+      font-size: 12px;
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .test-instructions strong {
+      color: #00B4D8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="test-instructions">
+    <div>
+      <strong>WARDEN EXTENSION TESTBENCH</strong> — Click the photo attachment gallery icon (🖼️) in the compose bar below to select a file.
+    </div>
+    <div style="font-family: monospace; font-size: 11px; color: #F8FAFC;">
+      Test Anandhu (Blocked) vs Unregistered (Cleared)
+    </div>
+  </div>
+
+  <header class="ig-header">
+    <div class="ig-user-profile">
+      <div class="ig-avatar">IG</div>
+      <div>
+        <div class="ig-username">Alex Rivera</div>
+        <div style="font-size: 11px; color: #737373;">Active now • Direct Message</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <a href="/test_whatsapp_web_mock.html" style="font-size: 12px; color: #25d366; text-decoration: none; font-weight: 600; padding: 5px 10px; border-radius: 6px; background: rgba(37, 211, 102, 0.1); border: 1px solid rgba(37, 211, 102, 0.25);">
+        💬 WhatsApp Web Testbench
+      </a>
+      <a href="/mock_instagram_registry.html" style="font-size: 12px; color: #0095f6; text-decoration: none; font-weight: 600; padding: 5px 10px; border-radius: 6px; background: rgba(0, 149, 246, 0.1); border: 1px solid rgba(0, 149, 246, 0.25);">
+        ⚙️ Likeness Privacy Settings
+      </a>
+      <div class="ig-badge-test">MOCK INSTAGRAM DM ENVIRONMENT</div>
+    </div>
+  </header>
+
+  <main class="ig-chat-area" id="chat-messages" role="main">
+    <div class="system-notice">
+      Direct Messages are end-to-end encrypted. Warden Likeness Shield active at client boundary.
+    </div>
+    <div class="chat-bubble bubble-incoming">
+      Hey! Do you have the promo assets for our HackAthena launch? Send them over!
+    </div>
+  </main>
+
+  <div class="ig-composer-container">
+    <div class="ig-composer-box">
+      <!-- Hidden native file input identical to Instagram DM -->
+      <input type="file" id="dm-photo-input" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" multiple style="display:none;" />
+
+      <input type="text" class="ig-input-text" id="dm-text-input" placeholder="Message..." />
+
+      <div class="ig-composer-actions">
+        <!-- Photo Attachment Button (Targeted by Extension) -->
+        <button class="ig-icon-btn" id="dm-attach-photo-btn" title="Add Photo or Video" aria-label="Add Photo or Video">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </button>
+
+        <!-- Voice Note Button -->
+        <button class="ig-icon-btn" title="Record Voice Message" aria-label="Record Voice Message">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+
+        <button class="ig-send-btn" id="dm-send-btn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Native simulated Instagram DM attach handler
+    const attachBtn = document.getElementById("dm-attach-photo-btn");
+    const fileInput = document.getElementById("dm-photo-input");
+    const chatArea = document.getElementById("chat-messages");
+
+    attachBtn.addEventListener("click", () => {
+      fileInput.click();
+    });
+
+    // Native Instagram DM file change event
+    // NOTE: If Warden blocks the file, this listener will NEVER be executed!
+    // If Warden clears the file, this listener executes normally and attaches the photo.
+    fileInput.addEventListener("change", (e) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      console.log(`[Native Instagram UI] ${files.length} attachment(s) received and permitted:`, Array.from(files).map(f => f.name));
+
+      Array.from(files).forEach((file) => {
+        const isVideo = (file.type && file.type.startsWith("video/")) || /\.(mp4|webm|avi|mov)$/i.test(file.name);
+        const mediaUrl = URL.createObjectURL(file);
+        const card = document.createElement("div");
+        card.className = "attached-preview-card";
+        const mediaTag = isVideo 
+          ? `<video src="${mediaUrl}" controls autoplay muted style="width:100%; max-height:220px; border-radius:8px;"></video>`
+          : `<img src="${mediaUrl}" alt="Attached Photo" />`;
+
+        card.innerHTML = `
+          ${mediaTag}
+          <div class="attached-meta">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Attached: ${file.name.substring(0, 16)}...
+          </div>
+        `;
+        chatArea.appendChild(card);
+        chatArea.scrollTop = chatArea.scrollHeight;
+      });
+    });
+  </script>
+</body>
+</html>

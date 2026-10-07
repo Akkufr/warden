@@ -1,0 +1,257 @@
+/* ==========================================================================
+   WARDEN — Instagram DM Upload Gating Badge (Content Script Styling)
+   Consistent with Executive Obsidian & Cybersecurity Biometrics Aesthetic
+   ========================================================================== */
+
+.warden-dm-badge-container {
+  position: fixed;
+  bottom: 84px;
+  right: 28px;
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: all;
+  animation: wardenSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+}
+
+@keyframes wardenSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.warden-dm-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background-color: #0B1D36;
+  background-image: radial-gradient(circle at 10% 20%, #16253B 0%, #0B1D36 80%);
+  border: 1px solid #273A52;
+  border-radius: 9px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(0, 180, 216, 0.12);
+  min-width: 290px;
+  max-width: 380px;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+/* Icon block */
+.warden-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #101E30;
+  border: 1px solid #273A52;
+  flex-shrink: 0;
+  color: #00B4D8;
+}
+
+.warden-badge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.warden-badge-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.warden-badge-title {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #F8FAFC;
+  text-transform: uppercase;
+}
+
+.warden-badge-desc {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: #94A3B8;
+  margin-top: 1px;
+}
+
+.warden-badge-mono {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #CBD5E1;
+  margin-top: 2px;
+}
+
+/* Close/Dismiss button */
+.warden-badge-close {
+  background: none;
+  border: none;
+  color: #64748B;
+  cursor: pointer;
+  padding: 2px;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.warden-badge-close:hover {
+  color: #F8FAFC;
+}
+
+/* Action buttons for offline / error */
+.warden-badge-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.warden-btn-action {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.warden-btn-allow {
+  background: #1E293B;
+  color: #E2E8F0;
+  border-color: #334155;
+}
+
+.warden-btn-allow:hover {
+  background: #334155;
+  color: #FFFFFF;
+}
+
+.warden-btn-cancel {
+  background: transparent;
+  color: #94A3B8;
+}
+
+.warden-btn-cancel:hover {
+  color: #E2E8F0;
+}
+
+/* ----------------------------------------------------
+   STATE: CHECKING (ELECTRIC CYAN)
+   ---------------------------------------------------- */
+.warden-dm-badge.state-checking {
+  border-color: #00B4D8;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 12px rgba(0, 180, 216, 0.25);
+}
+
+.warden-dm-badge.state-checking .warden-badge-icon {
+  color: #00B4D8;
+  border-color: rgba(0, 180, 216, 0.4);
+}
+
+.warden-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 180, 216, 0.25);
+  border-top-color: #00B4D8;
+  border-radius: 50%;
+  animation: wardenSpin 0.75s linear infinite;
+}
+
+@keyframes wardenSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ----------------------------------------------------
+   STATE: PASSED / CLEARED (EMERALD)
+   ---------------------------------------------------- */
+.warden-dm-badge.state-pass {
+  border-color: #2A9D8F;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 12px rgba(42, 157, 143, 0.25);
+}
+
+.warden-dm-badge.state-pass .warden-badge-icon {
+  color: #2A9D8F;
+  border-color: rgba(42, 157, 143, 0.4);
+}
+
+.warden-dm-badge.state-pass .warden-badge-title {
+  color: #2A9D8F;
+}
+
+/* ----------------------------------------------------
+   STATE: BLOCKED / FRAUD DETECTED (CRIMSON)
+   ---------------------------------------------------- */
+.warden-dm-badge.state-blocked {
+  background-color: #160D12;
+  background-image: radial-gradient(circle at 10% 20%, #261219 0%, #160D12 80%);
+  border-color: #E63946;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 16px rgba(230, 57, 70, 0.35);
+}
+
+.warden-dm-badge.state-blocked .warden-badge-icon {
+  color: #E63946;
+  background: #2B1117;
+  border-color: rgba(230, 57, 70, 0.4);
+}
+
+.warden-dm-badge.state-blocked .warden-badge-title {
+  color: #E63946;
+}
+
+/* ----------------------------------------------------
+   STATE: OFFLINE (NEUTRAL SLATE)
+   ---------------------------------------------------- */
+.warden-dm-badge.state-offline {
+  background-color: #101E30;
+  border-color: #475569;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+}
+
+.warden-dm-badge.state-offline .warden-badge-icon {
+  color: #94A3B8;
+  border-color: #475569;
+}
+
+.warden-dm-badge.state-offline .warden-badge-title {
+  color: #94A3B8;
+}
+
+/* ----------------------------------------------------
+   STATE: FILTERED / MULTI-ATTACHMENT GATED (AMBER)
+   ---------------------------------------------------- */
+.warden-dm-badge.state-filtered {
+  background-color: #1A150A;
+  background-image: radial-gradient(circle at 10% 20%, #291F0B 0%, #1A150A 80%);
+  border-color: #F59E0B;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 16px rgba(245, 158, 11, 0.35);
+}
+
+.warden-dm-badge.state-filtered .warden-badge-icon {
+  color: #F59E0B;
+  background: #33240D;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.warden-dm-badge.state-filtered .warden-badge-title {
+  color: #F59E0B;
+}
+
