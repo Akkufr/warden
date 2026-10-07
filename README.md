@@ -1,14 +1,11 @@
-# WARDEN — Consent-Based Identity Verification Framework (v2, Expanded)
-
-**Event:** HackAthena 2.0  
-**Theme:** Detection and Prevention of AI-Based Frauds  
-**Team:** TITANS (Anandhu A, Akshay B A, Joshy Bovas, Manu V S)  
+# WARDEN — An API Framework That Works With Social Media Platforms
+## Consent-Based Identity Verification & Biometric Upload Gating Framework
 
 ---
 
 ## 1. Executive Summary
 
-**Warden** is a backend identity-verification and upload gating framework delivered as an API and visual moderation interface. Rather than attempting to solve the fragile, adversarial arms race of determining whether a video or image is authentic vs. AI-generated, **Warden detects a far narrower and more tractable signal**:
+**Warden** is an API framework that works with social media platforms (Instagram DMs, WhatsApp Web, Webhooks, and REST/WebSocket endpoints) to deliver proactive identity verification and upload gating. Rather than attempting to solve the fragile, adversarial arms race of determining whether a video or image is authentic vs. AI-generated, **Warden detects a far narrower and more tractable signal**:
 
 > *"Does this uploaded content contain a face matching someone who has explicitly opted in for likeness protection?"*
 
@@ -108,7 +105,7 @@ http://127.0.0.1:8000
 ## 7. Pre-Packaged Benchmark Test Samples
 
 The system includes pre-loaded benchmark assets accessible via the 'Load AI Benchmark Example' button or direct file upload:
-1. **Opted-In Registrant (Anandhu A):** Verified positive match (Similarity > 93%) triggering Guard Block.
+1. **Opted-In Registrant:** Verified positive match (Similarity > 93%) triggering Guard Block.
 2. **Unregistered Subject (Senior):** High-discrimination check (Similarity < 20%) passing as Cleared.
 3. **Multi-Person Scene:** Multi-face detection with simultaneous cleared and flagged outcomes.
 4. **Synthetic Studio Frame:** Deepfake-style AI broadcast still testing.
@@ -117,7 +114,7 @@ The system includes pre-loaded benchmark assets accessible via the 'Load AI Benc
 
 ---
 
-## 8. REST API Reference
+## 8. REST & WebSocket API Reference
 
 - `GET /api/health` — System status, FAISS index vector count, model status.
 - `GET /api/samples` — List built-in benchmark test media.
@@ -130,11 +127,10 @@ The system includes pre-loaded benchmark assets accessible via the 'Load AI Benc
 
 ---
 
-## 9. Team TITANS Credits
+## 9. Social Media Platform Integration
 
-- **Anandhu A**
-- **Akshay B A**
-- **Joshy Bovas**
-- **Manu V S**
+Warden provides client-boundary interceptors and API integrations for social media platforms:
+- **Instagram Direct Messages (DMs):** Intercepts native media picker before preview generation or upload transmission.
+- **WhatsApp Web:** Intercepts attachment events in chat composers, streaming media directly to the Warden verification pipeline.
+- **Chrome Extension (Manifest V3):** Lightweight client in `extension/` providing zero-latency binary streaming and real-time gate pass/block enforcement.
 
-*HackAthena 2.0 — Theme: Detection and Prevention of AI-Based Frauds*

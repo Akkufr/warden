@@ -1,17 +1,14 @@
-# WARDEN — Chrome Extension (Manifest V3)
-## Consent-Based Biometric Upload Gating for Instagram DMs & WhatsApp Web
-
-**Event:** HackAthena 2.0  
-**Theme:** Detection and Prevention of AI-Based Frauds  
-**Team:** TITANS (Anandhu A, Akshay B A, Joshy Bovas, Manu V S)  
+# WARDEN — An API Framework That Works With Social Media Platforms
+## Consent-Based Biometric Upload Gating & Chrome Extension (Instagram DMs, WhatsApp Web, and Web APIs)
 
 ---
 
 ## 1. Overview & Architecture
 
-This Chrome extension (Manifest V3) brings **Warden's proactive client-boundary protection** directly into the social web. It specifically targets media attachments inside:
+**Warden** is an API framework that works with social media platforms to deliver proactive client-boundary identity verification and upload gating directly across the social web. Delivered via high-speed REST/WebSocket endpoints and a lightweight Chrome extension (Manifest V3), Warden specifically safeguards media attachments inside:
 1. **Instagram Direct Messages (DMs)** (`instagram.com/direct/...`)
 2. **WhatsApp Web** (`web.whatsapp.com/...`)
+3. **Platform APIs & Webhooks** (`/api/scan`, `/api/upload`, `/ws/pipeline`)
 
 Rather than waiting for non-consensual AI deepfakes, face swaps, or impersonation videos/images to be transmitted and stored on social media servers, **Warden intercepts media at the moment of selection in the native file picker**, compares facial geometry against the local encrypted FAISS vector index, and enforces real-time upload gating with **zero startup latency**.
 
@@ -69,9 +66,9 @@ In previous implementations, video files suffered noticeable startup lag due to:
    ```
 3. In the top-right corner, toggle **Developer mode** to **ON**.
 4. Click the **Load unpacked** button in the top-left toolbar.
-5. In the folder picker dialog, select the extension folder:
+5. In the folder picker dialog, select the `extension` folder inside this repository:
    ```
-   d:\THE TITANS\extension
+   warden/extension
    ```
 6. The extension **Warden — Social Media Likeness Shield** (v1.1.0) is now loaded and active.
 
@@ -95,7 +92,7 @@ To evaluate WhatsApp Web upload gating in an authentic chat environment:
 3. Select a test image or video:
    - **Test Unauthorized Match (BLOCK):** Select `backend/samples/sample_registrant_anandhu.jpg`.
      - *Result:* Intercepted instantly. The dashboard opens showing live vector alignment. The WhatsApp chat receives **NO file**, and the status badge displays:
-       **"Upload Blocked: Consent Not Obtained. We have not obtained consent from the person present in this media (Anandhu A)..."**
+       **"Upload Blocked: Consent Not Obtained. We have not obtained consent from the person present in this media..."**
    - **Test Clean Unregistered Image (PASS):** Select `backend/samples/sample_unregistered_senior.jpg`.
      - *Result:* Intercepted, checked, and cleared. The status badge displays **✓ WARDEN CLEARED**, and the image appears attached inside the WhatsApp chat bubble!
 
@@ -126,7 +123,7 @@ To demonstrate the production-ready social privacy settings interface:
 ## 5. Extension File Structure
 
 ```
-d:\THE TITANS\extension\
+extension/
 ├── manifest.json              # Chrome Manifest V3 declaration (IG & WhatsApp Web)
 ├── background.js             # Service worker handling API requests & zero-delay staging
 ├── content.js                # Capture-phase file interceptor & platform-aware badge UI
