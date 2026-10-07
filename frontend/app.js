@@ -3,13 +3,51 @@
 const WARDEN_API_KEY = "warden-dev-key-9941";
 let currentRegistrationChallenge = null;
 
+// Dynamic Backend Configuration (Supports Vercel Frontend + Railway Backend)
+function getSavedBackendUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const paramBackend = params.get("backend") || params.get("api");
+    if (paramBackend) {
+      let clean = paramBackend.trim();
+      if (clean.endsWith("/")) clean = clean.slice(0, -1);
+      localStorage.setItem("warden_backend_url", clean);
+      return clean;
+    }
+  } catch (e) {}
+
+  let saved = localStorage.getItem("warden_backend_url") || window.WARDEN_BACKEND_URL || "";
+  if (saved && saved.endsWith("/")) saved = saved.slice(0, -1);
+  return saved;
+}
+
+function getBackendUrl(path = "") {
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const base = getSavedBackendUrl();
+  if (!path.startsWith("/")) path = "/" + path;
+  return base ? `${base}${path}` : path;
+}
+
+function getWebSocketUrl() {
+  const base = getSavedBackendUrl() || window.location.origin;
+  try {
+    const urlObj = new URL(base, window.location.href);
+    const wsProtocol = urlObj.protocol === "https:" ? "wss:" : "ws:";
+    return `${wsProtocol}//${urlObj.host}/ws/pipeline`;
+  } catch (e) {
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${wsProtocol}//${window.location.host}/ws/pipeline`;
+  }
+}
+
 async function wardenFetch(url, options = {}) {
+  const fullUrl = getBackendUrl(url);
   const opts = { ...options };
   opts.headers = {
     "X-Warden-API-Key": WARDEN_API_KEY,
     ...(opts.headers || {})
   };
-  return fetch(url, opts);
+  return fetch(fullUrl, opts);
 }
 
 async function fetchRegistrationChallenge() {
@@ -55,6 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
   initTabs();
   initModeControls();
+  initBackendConnection();
   initConsoleCLI();
   initMediaUploader();
   initVectorDisplay();
@@ -65,6 +104,152 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchRegistryStats();
   initAutoRunParam();
 });
+
+// ==========================================
+// 0. BACKEND CONNECTION & MODAL FOR VERCEL DEPLOYMENT
+// ==========================================
+function initBackendConnection() {
+  const badge = document.getElementById("backend-status-badge");
+  const modal = document.getElementById("backend-modal");
+  const closeBtn = document.getElementById("close-backend-modal-btn");
+  const saveBtn = document.getElementById("save-backend-btn");
+  const resetBtn = document.getElementById("reset-backend-btn");
+  const input = document.getElementById("backend-url-input");
+  const statusDiv = document.getElementById("backend-modal-status");
+
+  function openModal() {
+    if (modal) {
+      if (input) input.value = getSavedBackendUrl() || "";
+      if (statusDiv) {
+        statusDiv.style.display = "none";
+        statusDiv.textContent = "";
+      }
+      modal.style.display = "flex";
+      if (input) input.focus();
+    }
+  }
+
+  function closeModal() {
+    if (modal) modal.style.display = "none";
+  }
+
+  if (badge) badge.addEventListener("click", openModal);
+  if (closeBtn) closeBtn.addEventListener("click", closeModal);
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener("click", async () => {
+      const val = input ? input.value.trim() : "";
+      if (val) {
+        let clean = val;
+        if (clean.endsWith("/")) clean = clean.slice(0, -1);
+        if (!clean.startsWith("http://") && !clean.startsWith("https://")) {
+          clean = "https://" + clean;
+        }
+        localStorage.setItem("warden_backend_url", clean);
+        if (statusDiv) {
+          statusDiv.style.display = "block";
+          statusDiv.style.background = "rgba(6, 182, 212, 0.15)";
+          statusDiv.style.color = "#06b6d4";
+          statusDiv.textContent = "Testing connection to " + clean + "...";
+        }
+        try {
+          const res = await fetch(`${clean}/api/health`, {
+            headers: { "X-Warden-API-Key": WARDEN_API_KEY }
+          });
+          if (res.ok) {
+            showToast("Connected to Railway Backend successfully!", "success");
+            closeModal();
+            updateBackendBadge(true);
+            fetchRegistryStats(false);
+          } else {
+            if (statusDiv) {
+              statusDiv.style.display = "block";
+              statusDiv.style.background = "rgba(239, 68, 68, 0.15)";
+              statusDiv.style.color = "#ef4444";
+              statusDiv.textContent = `Server responded with HTTP ${res.status}. Check API key or URL.`;
+            }
+          }
+        } catch (err) {
+          if (statusDiv) {
+            statusDiv.style.display = "block";
+            statusDiv.style.background = "rgba(239, 68, 68, 0.15)";
+            statusDiv.style.color = "#ef4444";
+            statusDiv.textContent = `Connection failed: ${err.message}. Make sure Railway server is online.`;
+          }
+        }
+      } else {
+        localStorage.removeItem("warden_backend_url");
+        updateBackendBadge(null);
+        closeModal();
+      }
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      localStorage.removeItem("warden_backend_url");
+      if (input) input.value = "";
+      updateBackendBadge(null);
+      showToast("Reset to same origin", "info");
+      closeModal();
+      fetchRegistryStats(false);
+    });
+  }
+
+  // Periodic and initial check
+  checkBackendHealth();
+  setInterval(checkBackendHealth, 30000);
+}
+
+async function checkBackendHealth() {
+  try {
+    const res = await wardenFetch("/api/health");
+    if (res.ok) {
+      const data = await res.json();
+      updateBackendBadge(true, data);
+    } else {
+      updateBackendBadge(false);
+    }
+  } catch (e) {
+    updateBackendBadge(false);
+  }
+}
+
+function updateBackendBadge(isHealthy, data = null) {
+  const badgeText = document.getElementById("sys-status-text");
+  const badgeDot = document.querySelector("#backend-status-badge .status-dot");
+  const savedUrl = getSavedBackendUrl();
+
+  if (isHealthy === true) {
+    if (badgeText) badgeText.textContent = savedUrl ? "RAILWAY ONLINE" : "FAISS READY";
+    if (badgeDot) {
+      badgeDot.style.background = "#10b981";
+      badgeDot.style.boxShadow = "0 0 8px #10b981";
+    }
+  } else if (isHealthy === false) {
+    if (badgeText) badgeText.textContent = savedUrl ? "RAILWAY OFFLINE" : "CONNECT RAILWAY";
+    if (badgeDot) {
+      badgeDot.style.background = "#ef4444";
+      badgeDot.style.boxShadow = "0 0 8px #ef4444";
+    }
+    // Auto-prompt on Vercel if not yet connected
+    if (window.location.hostname.includes("vercel.app") && !savedUrl) {
+      setTimeout(() => {
+        const modal = document.getElementById("backend-modal");
+        if (modal && modal.style.display !== "flex") {
+          const input = document.getElementById("backend-url-input");
+          if (input) input.value = "";
+          modal.style.display = "flex";
+        }
+      }, 1500);
+    }
+  }
+}
 
 // ==========================================
 // 0A. EXTENSION & INTEGRATION AUTO-RUN HOOK
@@ -935,9 +1120,7 @@ function runPipelineScan() {
   startBtn.disabled = true;
   startBtn.innerHTML = `VERIFYING MEDIA...`;
 
-  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const wsUrl = `${wsProtocol}//${window.location.host}/ws/pipeline`;
-
+  const wsUrl = getWebSocketUrl();
   socket = new WebSocket(wsUrl);
 
   socket.onopen = () => {
@@ -2348,7 +2531,7 @@ function initRegistrationUX() {
         addLogEntry("INFO", "[Simulation] 4-angle sequential capture complete. Verifying duplicate status...");
         await checkDuplicateFaceOnEnrolment();
       };
-      img.src = "/backend/samples/sample_registrant_anandhu.jpg";
+      img.src = getBackendUrl("/backend/samples/sample_registrant_anandhu.jpg");
     } catch (e) {
       addLogEntry("WARN", `Simulation error: ${e.message}`);
     }
