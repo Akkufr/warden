@@ -13,12 +13,14 @@ if __name__ == "__main__":
     print("  Event: HackAthena 2.0 | Theme: Detection & Prevention of AI Frauds")
     print("  Team TITANS — Anandhu A, Akshay B A, Joshy Bovas, Manu V S")
     print("==================================================================")
-    print("Starting Warden Server on http://127.0.0.1:8000 ...")
+    host = os.environ.get("HOST", "127.0.0.1")
+    port = int(os.environ.get("PORT", "8000"))
+    print(f"Starting Warden Server on http://{host}:{port} ...")
 
     uvicorn.run(
         "backend.app:app",
-        host="127.0.0.1",
-        port=8000,
+        host=host,
+        port=port,
         reload=False,
         log_level="info"
     )
