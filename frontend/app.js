@@ -3,6 +3,9 @@
 const WARDEN_API_KEY = "warden-dev-key-9941";
 let currentRegistrationChallenge = null;
 
+// Default Railway Backend URL (Set this to connect Vercel automatically with 0 user prompts):
+const DEFAULT_BACKEND_URL = "https://warden-production-10b1.up.railway.app";
+
 // Dynamic Backend Configuration (Supports Vercel Frontend + Railway Backend)
 function getSavedBackendUrl() {
   try {
@@ -16,7 +19,7 @@ function getSavedBackendUrl() {
     }
   } catch (e) {}
 
-  let saved = localStorage.getItem("warden_backend_url") || window.WARDEN_BACKEND_URL || "";
+  let saved = localStorage.getItem("warden_backend_url") || window.WARDEN_BACKEND_URL || DEFAULT_BACKEND_URL || "";
   if (saved && saved.endsWith("/")) saved = saved.slice(0, -1);
   return saved;
 }
